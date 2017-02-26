@@ -13,8 +13,8 @@
  * GNU General Public License for more details.
 
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/ 
- * 
+ * along with this program.  If not, see http://www.gnu.org/licenses/
+ *
  */
 
 #include "Processor.h"
@@ -89,7 +89,7 @@ void Processor::SetIOPOrts(IOPorts* pIOPorts)
 unsigned int Processor::Tick()
 {
     m_iTStates = 0;
-    
+
     if (!m_bInputLastCycle)
     {
         if (m_bNMIRequested)
@@ -115,11 +115,11 @@ unsigned int Processor::Tick()
             IncreaseR();
             XY.SetValue(PC.GetValue());
             return m_iTStates;
-        } 
+        }
 
         m_bAfterEI = false;
     }
-        
+
     ExecuteOPCode();
 
     return m_iTStates;
@@ -138,129 +138,129 @@ void Processor::RequestNMI()
 void Processor::ExecuteOPCode()
 {
     u8 opcode = FetchOPCode();
-    
+
     switch (opcode)
     {
-        case 0xDD:
-        case 0xFD:
+    case 0xDD:
+    case 0xFD:
+    {
+        int more_prefixes = false;
+        while ((opcode == 0xDD) | (opcode == 0xFD))
         {
-            int more_prefixes = false;
-            while ((opcode == 0xDD) | (opcode == 0xFD))
-            {
-                m_CurrentPrefix = opcode;
-                opcode = FetchOPCode();
-                if (more_prefixes)
-                    m_iTStates += 4;
-                more_prefixes = true;
-                IncreaseR();
-            }
-            break;
+            m_CurrentPrefix = opcode;
+            opcode = FetchOPCode();
+            if (more_prefixes)
+                m_iTStates += 4;
+            more_prefixes = true;
+            IncreaseR();
         }
-        default:
-        {
-            m_CurrentPrefix = 0x00;
-            break;
-        } 
+        break;
     }
-    
+    default:
+    {
+        m_CurrentPrefix = 0x00;
+        break;
+    }
+    }
+
     switch (opcode)
     {
-        case 0xCB:
+    case 0xCB:
+    {
+        IncreaseR();
+
+        if (IsPrefixedInstruction())
         {
+            m_bPrefixedCBOpcode = true;
+            m_PrefixedCBValue = m_pMemory->Read(PC.GetValue());
+            PC.Increment();
+        }
+        else
             IncreaseR();
 
-            if (IsPrefixedInstruction())
-            {
-                m_bPrefixedCBOpcode = true;
-                m_PrefixedCBValue = m_pMemory->Read(PC.GetValue());
-                PC.Increment();
-            } 
-            else
-                IncreaseR();
-                    
-            opcode = FetchOPCode();
+        opcode = FetchOPCode();
 
 #ifdef DISASM_GEARSYSTEM
-            u16 opcode_address = PC.GetValue() - 1;
-            
-            if (!m_pMemory->IsDisassembled(opcode_address))
-            {
-                if (m_CurrentPrefix == 0xDD)
-                    m_pMemory->Disassemble(opcode_address, kOPCodeDDCBNames[opcode]);
-                else if (m_CurrentPrefix == 0xFD)
-                    m_pMemory->Disassemble(opcode_address, kOPCodeFDCBNames[opcode]);
-                else
-                    m_pMemory->Disassemble(opcode_address, kOPCodeCBNames[opcode]);
-            }
-#endif
+        u16 opcode_address = PC.GetValue() - 1;
 
-            (this->*m_OPCodesCB[opcode])();
-
-            if (IsPrefixedInstruction())
-            {
-                m_iTStates += kOPCodeXYCBTStates[opcode];
-                m_bPrefixedCBOpcode = false;
-            }
-            else
-                m_iTStates += kOPCodeCBTStates[opcode];
-            
-            break;
-        }
-        case 0xED:
+        if (!m_pMemory->IsDisassembled(opcode_address))
         {
-            IncreaseR();
-            IncreaseR();
-
-            m_CurrentPrefix = 0x00;
-            opcode = FetchOPCode();
-            
-#ifdef DISASM_GEARSYSTEM
-            u16 opcode_address = PC.GetValue() - 1;
-            
-            if (!m_pMemory->IsDisassembled(opcode_address))
-            {
-                m_pMemory->Disassemble(opcode_address, kOPCodeEDNames[opcode]);
-            }
-#endif
-
-            (this->*m_OPCodesED[opcode])();
-
-            m_iTStates += kOPCodeEDTStates[opcode];
-            break;
-        }
-        default:
-        {
-            if (!m_bInputLastCycle)
-                IncreaseR();
-
-#ifdef DISASM_GEARSYSTEM
-            u16 opcode_address = PC.GetValue() - 1;
-            
-            if (!m_pMemory->IsDisassembled(opcode_address))
-            {
-                if (m_CurrentPrefix == 0xDD)
-                    m_pMemory->Disassemble(opcode_address, kOPCodeDDNames[opcode]);
-                else if (m_CurrentPrefix == 0xFD)
-                    m_pMemory->Disassemble(opcode_address, kOPCodeFDNames[opcode]);
-                else
-                    m_pMemory->Disassemble(opcode_address, kOPCodeNames[opcode]);
-            }
-#endif
-
-            (this->*m_OPCodes[opcode])();
-
-            if (IsPrefixedInstruction())
-                m_iTStates += kOPCodeXYTStates[opcode];
+            if (m_CurrentPrefix == 0xDD)
+                m_pMemory->Disassemble(opcode_address, kOPCodeDDCBNames[opcode]);
+            else if (m_CurrentPrefix == 0xFD)
+                m_pMemory->Disassemble(opcode_address, kOPCodeFDCBNames[opcode]);
             else
-                m_iTStates += kOPCodeTStates[opcode];
-
-            if (m_bBranchTaken)
-            {
-                m_bBranchTaken = false;
-                m_iTStates += kOPCodeTStatesBranched[opcode];
-            }
-            break;
+                m_pMemory->Disassemble(opcode_address, kOPCodeCBNames[opcode]);
         }
+#endif
+
+        (this->*m_OPCodesCB[opcode])();
+
+        if (IsPrefixedInstruction())
+        {
+            m_iTStates += kOPCodeXYCBTStates[opcode];
+            m_bPrefixedCBOpcode = false;
+        }
+        else
+            m_iTStates += kOPCodeCBTStates[opcode];
+
+        break;
+    }
+    case 0xED:
+    {
+        IncreaseR();
+        IncreaseR();
+
+        m_CurrentPrefix = 0x00;
+        opcode = FetchOPCode();
+
+#ifdef DISASM_GEARSYSTEM
+        u16 opcode_address = PC.GetValue() - 1;
+
+        if (!m_pMemory->IsDisassembled(opcode_address))
+        {
+            m_pMemory->Disassemble(opcode_address, kOPCodeEDNames[opcode]);
+        }
+#endif
+
+        (this->*m_OPCodesED[opcode])();
+
+        m_iTStates += kOPCodeEDTStates[opcode];
+        break;
+    }
+    default:
+    {
+        if (!m_bInputLastCycle)
+            IncreaseR();
+
+#ifdef DISASM_GEARSYSTEM
+        u16 opcode_address = PC.GetValue() - 1;
+
+        if (!m_pMemory->IsDisassembled(opcode_address))
+        {
+            if (m_CurrentPrefix == 0xDD)
+                m_pMemory->Disassemble(opcode_address, kOPCodeDDNames[opcode]);
+            else if (m_CurrentPrefix == 0xFD)
+                m_pMemory->Disassemble(opcode_address, kOPCodeFDNames[opcode]);
+            else
+                m_pMemory->Disassemble(opcode_address, kOPCodeNames[opcode]);
+        }
+#endif
+
+        (this->*m_OPCodes[opcode])();
+
+        if (IsPrefixedInstruction())
+            m_iTStates += kOPCodeXYTStates[opcode];
+        else
+            m_iTStates += kOPCodeTStates[opcode];
+
+        if (m_bBranchTaken)
+        {
+            m_bBranchTaken = false;
+            m_iTStates += kOPCodeTStatesBranched[opcode];
+        }
+        break;
+    }
     }
 }
 
@@ -274,20 +274,20 @@ void Processor::InvalidOPCode()
 
     switch (prefix)
     {
-        case 0xCB:
-        {
-            Log("--> ** INVALID CB OP Code (%X) at $%.4X -- %s", opcode, opcode_address, kOPCodeCBNames[opcode]);
-            break;
-        }
-        case 0xED:
-        {
-            Log("--> ** INVALID ED OP Code (%X) at $%.4X -- %s", opcode, opcode_address, kOPCodeEDNames[opcode]);
-            break;
-        }
-        default:
-        {
-            Log("--> ** INVALID OP Code (%X) at $%.4X -- %s", opcode, opcode_address, kOPCodeNames[opcode]);
-        }
+    case 0xCB:
+    {
+        Log("--> ** INVALID CB OP Code (%X) at $%.4X -- %s", opcode, opcode_address, kOPCodeCBNames[opcode]);
+        break;
+    }
+    case 0xED:
+    {
+        Log("--> ** INVALID ED OP Code (%X) at $%.4X -- %s", opcode, opcode_address, kOPCodeEDNames[opcode]);
+        break;
+    }
+    default:
+    {
+        Log("--> ** INVALID OP Code (%X) at $%.4X -- %s", opcode, opcode_address, kOPCodeNames[opcode]);
+    }
     }
 #endif
 }

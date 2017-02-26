@@ -1,6 +1,6 @@
 /*
- * Gearsystem - Sega Master System / Game Gear Emulator
- * Copyright (C) 2013  Ignacio Sanchez
+ * Gearboy - Nintendo Game Boy Emulator
+ * Copyright (C) 2012  Ignacio Sanchez
 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,10 +20,14 @@
 #include "Audio.h"
 #include "Memory.h"
 
+
+#include <QDebug>
+
 Audio::Audio()
 {
     m_bEnabled = true;
     m_Time = 0;
+    m_AbsoluteTime = 0;
     m_iSampleRate = 44100;
     InitPointer(m_pApu);
     InitPointer(m_pBuffer);
@@ -41,36 +45,26 @@ Audio::~Audio()
 
 void Audio::Init()
 {
-	std::string platform = SDL_GetPlatform();
-
-	if (platform == "Linux")
-	{
-	    if (SDL_InitSubSystem(SDL_INIT_AUDIO) != 0)
-		{
-			Log("--> ** Error initalizing audio subsystem: %s", error, SDL_GetError());
-	    }
-
-	    if (SDL_AudioInit("alsa") !=0 )
-		{
-			Log("--> ** Error initalizing audio using ALSA: %s", error, SDL_GetError());
-	    }
-
-	}
-	else
-	{
-	    if(SDL_Init(SDL_INIT_AUDIO) < 0)
-	    {
-			Log("--> ** SDL Audio not initialized: %s", SDL_GetError());
-	    }
-	}
-
-    atexit(SDL_Quit);
-
+    int msecs = 250;
+    int channels = 2;
     m_pSampleBuffer = new blip_sample_t[kSampleBufferSize];
 
     m_pApu = new Sms_Apu();
-    m_pBuffer = new Stereo_Buffer();
+
     m_pSound = new Sound_Queue();
+
+    m_pSound->start(m_iSampleRate, channels);
+    qDebug() << "Sample Buffer Size: " << kSampleBufferSize;
+    qDebug() << "Blargg Blip Sample Szie: " << int(m_iSampleRate * channels * msecs / 1000.0);
+    if (channels == 2) {
+        Stereo_Buffer *buffer = new Stereo_Buffer();
+        m_pBuffer = buffer;
+        m_pApu->output(buffer->center(), buffer->left(), buffer->right());
+    } else {
+        Mono_Buffer* buffer = new Mono_Buffer();
+        m_pBuffer = buffer;
+        m_pApu->output(buffer->center());
+    }
 
     // Clock rate for NTSC is 3579545, 3559545 to avoid sttutering at 60hz
     // Clock rate for PAL is 3546893
@@ -79,23 +73,17 @@ void Audio::Init()
 
     m_pApu->treble_eq(-15.0);
     m_pBuffer->bass_freq(100);
-
-    m_pApu->output(m_pBuffer->center(), m_pBuffer->left(), m_pBuffer->right());
-
-    m_pSound->start(m_iSampleRate, 2);
 }
 
 void Audio::Reset(bool soft)
 {
-    m_bEnabled = true;
-    if (!soft)
+    if(!soft)
     {
         m_pApu->reset();
         m_pBuffer->clear();
         m_Time = 0;
+        m_AbsoluteTime = 0;
     }
-    m_pSound->stop();
-    m_pSound->start(m_iSampleRate, 2);
 }
 
 void Audio::Enable(bool enabled)
@@ -108,16 +96,6 @@ bool Audio::IsEnabled() const
     return m_bEnabled;
 }
 
-void Audio::SetSampleRate(int rate)
-{
-    if (rate != m_iSampleRate)
-    {
-        m_iSampleRate = rate;
-        m_pBuffer->set_sample_rate(m_iSampleRate);
-        m_pSound->stop();
-        m_pSound->start(m_iSampleRate, 2);
-    }
-}
 
 void Audio::WriteAudioRegister(u8 value)
 {
@@ -131,21 +109,13 @@ void Audio::WriteGGStereoRegister(u8 value)
 
 void Audio::EndFrame()
 {
-    m_pApu->end_frame((int)m_Time);
-    m_pBuffer->end_frame((int)m_Time);
-    m_Time = 0;
+    m_pApu->end_frame(m_AbsoluteTime);
+    m_pBuffer->end_frame(m_AbsoluteTime);
 
-    if (m_pBuffer->samples_avail() >= kSampleBufferSize)
-    {
+    if (m_pBuffer->samples_avail() >= kSampleBufferSize) { // while (m_pBuffer->samples_avail())
         long count = m_pBuffer->read_samples(m_pSampleBuffer, kSampleBufferSize);
-        if (m_bEnabled)
-        {
-            m_pSound->write(m_pSampleBuffer, (int)count);
+        if (m_bEnabled) {
+            m_pSound->write(m_pSampleBuffer, count);
         }
     }
-}
-
-void Audio::Tick(unsigned int clockCycles)
-{
-    m_Time += clockCycles;
 }

@@ -13,8 +13,8 @@
  * GNU General Public License for more details.
 
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/ 
- * 
+ * along with this program.  If not, see http://www.gnu.org/licenses/
+ *
  */
 
 #include "CodemastersMemoryRule.h"
@@ -64,28 +64,28 @@ void CodemastersMemoryRule::PerformWrite(u16 address, u8 value)
         // ROM page 0, 1 and 2
         switch (address)
         {
-            case 0x0000:
-            {
-                m_iMapperSlot[0] = value & (m_pCartridge->GetROMBankCount() - 1);
-                m_iMapperSlotAddress[0] = m_iMapperSlot[0] * 0x4000;
-                break;
-            }
-            case 0x4000:
-            {
-                m_iMapperSlot[1] = value & (m_pCartridge->GetROMBankCount() - 1);
-                m_iMapperSlotAddress[1] = m_iMapperSlot[1] * 0x4000;
-                break;
-            }
-            case 0x8000:
-            {
-                m_iMapperSlot[2] = value & (m_pCartridge->GetROMBankCount() - 1);
-                m_iMapperSlotAddress[2] = m_iMapperSlot[2] * 0x4000;
-                break;
-            }
-            default:
-            {
-                Log("--> ** Attempting to write on ROM address $%X %X", address, value);
-            }
+        case 0x0000:
+        {
+            m_iMapperSlot[0] = value & (m_pCartridge->GetROMBankCount() - 1);
+            m_iMapperSlotAddress[0] = m_iMapperSlot[0] * 0x4000;
+            break;
+        }
+        case 0x4000:
+        {
+            m_iMapperSlot[1] = value & (m_pCartridge->GetROMBankCount() - 1);
+            m_iMapperSlotAddress[1] = m_iMapperSlot[1] * 0x4000;
+            break;
+        }
+        case 0x8000:
+        {
+            m_iMapperSlot[2] = value & (m_pCartridge->GetROMBankCount() - 1);
+            m_iMapperSlotAddress[2] = m_iMapperSlot[2] * 0x4000;
+            break;
+        }
+        default:
+        {
+            Log("--> ** Attempting to write on ROM address $%X %X", address, value);
+        }
         }
     }
     else if (address < 0xE000)

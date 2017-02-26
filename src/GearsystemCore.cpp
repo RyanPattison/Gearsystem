@@ -13,8 +13,8 @@
  * GNU General Public License for more details.
 
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/ 
- * 
+ * along with this program.  If not, see http://www.gnu.org/licenses/
+ *
  */
 
 #include "GearsystemCore.h"
@@ -49,24 +49,6 @@ GearsystemCore::GearsystemCore()
 
 GearsystemCore::~GearsystemCore()
 {
-#ifdef DEBUG_GEARSYSTEM
-    if (m_pCartridge->IsReady())
-    {
-        Log("Saving Memory Dump...");
-
-        using namespace std;
-
-        char path[512];
-
-        strcpy(path, m_pCartridge->GetFilePath());
-        strcat(path, ".dump");
-
-        m_pMemory->MemoryDump(path);
-
-        Log("Memory Dump Saved");
-    }
-#endif
-
     SafeDelete(m_pGameGearIOPorts);
     SafeDelete(m_pSmsIOPorts);
     SafeDelete(m_pRomOnlyMemoryRule);
@@ -121,24 +103,6 @@ void GearsystemCore::RunToVBlank(GS_Color* pFrameBuffer)
 
 bool GearsystemCore::LoadROM(const char* szFilePath)
 {
-#ifdef DEBUG_GEARSYSTEM
-    if (m_pCartridge->IsReady())
-    {
-        Log("Saving Memory Dump...");
-
-        using namespace std;
-
-        char path[512];
-
-        strcpy(path, m_pCartridge->GetFilePath());
-        strcat(path, ".dump");
-
-        m_pMemory->MemoryDump(path);
-
-        Log("Memory Dump Saved");
-    }
-#endif
-
     bool loaded = m_pCartridge->LoadFromFile(szFilePath);
     if (loaded)
     {
@@ -179,14 +143,6 @@ void GearsystemCore::KeyReleased(GS_Joypads joypad, GS_Keys key)
 
 void GearsystemCore::Pause(bool paused)
 {
-    if (paused)
-    {
-        Log("Gearsystem PAUSED");
-    }
-    else
-    {
-        Log("Gearsystem RESUMED");
-    }
     m_bPaused = paused;
 }
 
@@ -208,14 +164,6 @@ void GearsystemCore::ResetROM()
 
 void GearsystemCore::EnableSound(bool enabled)
 {
-    if (enabled)
-    {
-        Log("Gearsystem sound ENABLED");
-    }
-    else
-    {
-        Log("Gearsystem sound DISABLED");
-    }
     m_pAudio->Enable(enabled);
 }
 
@@ -224,18 +172,7 @@ void GearsystemCore::ResetSound(bool soft)
     m_pAudio->Reset(soft);
 }
 
-void GearsystemCore::SetSoundSampleRate(int rate)
-{
-    Log("Gearsystem sound sample rate: %d", rate);
-    m_pAudio->SetSampleRate(rate);
-}
-
-void GearsystemCore::SaveRam()
-{
-    SaveRam(NULL);
-}
-
-void GearsystemCore::SaveRam(const char* szPath)
+bool GearsystemCore::SaveRam(const char* szPath)
 {
     if (m_pCartridge->IsReady() && IsValidPointer(m_pMemory->GetCurrentRule()) && m_pMemory->GetCurrentRule()->PersistedRAM())
     {
@@ -266,11 +203,7 @@ void GearsystemCore::SaveRam(const char* szPath)
 
         Log("RAM saved");
     }
-}
-
-void GearsystemCore::LoadRam()
-{
-    LoadRam(NULL);
+    return false;
 }
 
 void GearsystemCore::LoadRam(const char* szPath)
@@ -346,20 +279,20 @@ bool GearsystemCore::AddMemoryRules()
 
     switch (type)
     {
-        case Cartridge::CartridgeRomOnlyMapper:
-            m_pMemory->SetCurrentRule(m_pRomOnlyMemoryRule);
-            break;
-        case Cartridge::CartridgeSegaMapper:
-            m_pMemory->SetCurrentRule(m_pSegaMemoryRule);
-            break;
-        case Cartridge::CartridgeCodemastersMapper:
-            m_pMemory->SetCurrentRule(m_pCodemastersMemoryRule);
-            break;
-        case Cartridge::CartridgeNotSupported:
-            notSupported = true;
-            break;
-        default:
-            notSupported = true;
+    case Cartridge::CartridgeRomOnlyMapper:
+        m_pMemory->SetCurrentRule(m_pRomOnlyMemoryRule);
+        break;
+    case Cartridge::CartridgeSegaMapper:
+        m_pMemory->SetCurrentRule(m_pSegaMemoryRule);
+        break;
+    case Cartridge::CartridgeCodemastersMapper:
+        m_pMemory->SetCurrentRule(m_pCodemastersMemoryRule);
+        break;
+    case Cartridge::CartridgeNotSupported:
+        notSupported = true;
+        break;
+    default:
+        notSupported = true;
     }
 
     if (m_pCartridge->IsGameGear())

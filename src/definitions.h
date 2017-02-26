@@ -13,8 +13,8 @@
  * GNU General Public License for more details.
 
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/ 
- * 
+ * along with this program.  If not, see http://www.gnu.org/licenses/
+ *
  */
 
 #ifndef DEFINITIONS_H
@@ -76,8 +76,8 @@ typedef int64_t s64;
 #define GS_GG_HEIGHT 144
 #define GS_GG_X_OFFSET 48
 #define GS_GG_Y_OFFSET 24
-#define GS_BORDER_LEFT_RIGHT 64
-#define GS_BORDER_TOP_BOTTOM 48
+#define GS_BORDER_LEFT_RIGHT 0
+#define GS_BORDER_TOP_BOTTOM 0
 #define GS_SCREEN_WIDTH (GS_SMS_WIDTH + (GS_BORDER_LEFT_RIGHT * 2))
 #define GS_SCREEN_HEIGHT (GS_SMS_HEIGHT + (GS_BORDER_TOP_BOTTOM * 2))
 
@@ -90,13 +90,27 @@ typedef int64_t s64;
 #define GS_LINES_PER_FRAME_PAL 313
 #define GS_FRAMES_PER_SECOND_PAL 50
 
+
 struct GS_Color
 {
-    u8 red;
-    u8 green;
-    u8 blue;
-    u8 alpha;
+    // bits are in RGB5A1 format
+    u16 bits;
+
+    GS_Color (u16 r, u16 g, u16 b) {
+        float to5bit = 31.0 / 255.0;
+        r *= to5bit;
+        g *= to5bit;
+        b *= to5bit;
+        bits = (r << 11) | (g << 6) | (b << 1) | 1;
+    }
+
+    GS_Color()
+    {
+     	bits = 0;
+    }
 };
+
+
 
 enum GS_Keys
 {
@@ -126,7 +140,7 @@ enum GS_System
 #ifdef DEBUG_GEARSYSTEM
 #define Log(msg, ...) (Log_func(msg, ##__VA_ARGS__))
 #else
-#define Log(msg, ...)  
+#define Log(msg, ...)
 #endif
 
 inline void Log_func(const char* const msg, ...)

@@ -13,13 +13,39 @@
  * GNU General Public License for more details.
 
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/ 
- * 
+ * along with this program.  If not, see http://www.gnu.org/licenses/
+ *
  */
 
 #include "Video.h"
 #include "Memory.h"
 #include "Processor.h"
+
+GS_Color *GG_Color_Table;
+GS_Color SMS_Color_Table[4 * 4 * 4];
+
+static void generateColorTables()
+{
+    GG_Color_Table = new GS_Color[16 * 16 * 16];
+    for (u16 c = 0; c < 16 * 16 * 16; ++c) {
+        int r = c & 0x0F;
+        int g = (c >> 4) & 0x0F;
+        int b = (c >> 8) & 0x0F;
+        int highest_value = 15;
+        GS_Color final_color((r * 255) / highest_value, (g * 255) / highest_value, (b * 255) / highest_value);
+        GG_Color_Table[c] = final_color;
+    }
+
+    for (u16 c = 0; c < 64; ++c) {
+        int r = c & 0x03;
+        int g = (c >> 2) & 0x03;
+        int b = (c >> 4) & 0x03;
+        int highest_value = 3;
+        GS_Color final_color((r * 255) / highest_value, (g * 255) / highest_value, (b * 255) / highest_value);
+        SMS_Color_Table[c] = final_color;
+    }
+}
+
 
 Video::Video(Memory* pMemory, Processor* pProcessor)
 {
@@ -53,6 +79,7 @@ Video::Video(Memory* pMemory, Processor* pProcessor)
     m_bReg10CounterDecremented = false;
     m_bExtendedMode224 = false;
     m_iRenderLine = 0;
+    generateColorTables();
 }
 
 Video::~Video()
@@ -60,6 +87,7 @@ Video::~Video()
     SafeDeleteArray(m_pInfoBuffer);
     SafeDeleteArray(m_pVdpVRAM);
     SafeDeleteArray(m_pVdpCRAM);
+    SafeDeleteArray(GG_Color_Table);
 }
 
 void Video::Init()
@@ -125,26 +153,26 @@ bool Video::Tick(unsigned int clockCycles, GS_Color* pColorFrameBuffer)
     int max_height = m_bExtendedMode224 ? 224 : 192;
     bool return_vblank = false;
     m_pColorFrameBuffer = pColorFrameBuffer;
-    
+
     m_iCycleCounter += clockCycles;
-    
+
     ///// VINT /////
-    if (!m_bVIntReached && (m_iCycleCounter >= 222)) 
+    if (!m_bVIntReached && (m_iCycleCounter >= 222))
     {
         m_bVIntReached = true;
         if ((m_iRenderLine == (max_height + 1)) && (IsSetBit(m_VdpRegister[1], 5)))
             m_pProcessor->RequestINT(true);
     }
-    
+
     ///// XSCROLL /////
     if (!m_bScrollXLatched && (m_iCycleCounter >= 211))
     {
         m_bScrollXLatched = true;
         m_ScrollX = m_VdpRegister[8];   // latch scroll X
     }
-    
+
     ///// HINT /////
-    if (!m_bHIntReached && (m_iCycleCounter >= 224)) 
+    if (!m_bHIntReached && (m_iCycleCounter >= 224))
     {
         m_bHIntReached = true;
         if (m_iRenderLine <= max_height)
@@ -160,9 +188,9 @@ bool Video::Tick(unsigned int clockCycles, GS_Color* pColorFrameBuffer)
         else
             m_iVdpRegister10Counter = m_VdpRegister[10];
     }
-    
+
     ///// VCOUNT /////
-    if (!m_bVCounterIncremented && (m_iCycleCounter >= 222)) 
+    if (!m_bVCounterIncremented && (m_iCycleCounter >= 222))
     {
         m_bVCounterIncremented = true;
         m_iVCounter++;
@@ -172,7 +200,7 @@ bool Video::Tick(unsigned int clockCycles, GS_Color* pColorFrameBuffer)
             m_iVCounter = 0;
         }
     }
-    
+
     ///// FLAG VINT /////
     if (!m_bVIntFlagSet && (m_iCycleCounter >= 222))
     {
@@ -180,20 +208,20 @@ bool Video::Tick(unsigned int clockCycles, GS_Color* pColorFrameBuffer)
         if (m_iRenderLine == (max_height + 1))
             m_VdpStatus = SetBit(m_VdpStatus, 7);
     }
-    
+
     ///// RENDER LINE /////
     if (m_iCycleCounter >= GS_CYCLES_PER_LINE)
     {
         if ((m_iRenderLine < max_height) && IsValidPointer(m_pColorFrameBuffer))
         {
-            ScanLine(m_iRenderLine);         
+            ScanLine(m_iRenderLine);
         }
         else if (m_iRenderLine == max_height)
         {
             return_vblank = true;
             if (!m_bExtendedMode224)
                 FillPadding();
-        }    
+        }
         m_iRenderLine++;
         m_iRenderLine %= m_iLinesPerFrame;
         m_iCycleCounter -= GS_CYCLES_PER_LINE;
@@ -287,18 +315,18 @@ void Video::WriteData(u8 data)
     m_VdpBuffer = data;
     switch (m_VdpCode)
     {
-        case VDP_READ_VRAM_OPERATION:
-        case VDP_WRITE_VRAM_OPERATION:
-        case VDP_WRITE_REG_OPERATION:
-        {
-            m_pVdpVRAM[m_VdpAddress] = data;
-            break;
-        }
-        case VDP_WRITE_CRAM_OPERATION:
-        {
-            m_pVdpCRAM[m_VdpAddress & (m_bGameGear ? 0x3F : 0x1F)] = data;
-            break;
-        }
+    case VDP_READ_VRAM_OPERATION:
+    case VDP_WRITE_VRAM_OPERATION:
+    case VDP_WRITE_REG_OPERATION:
+    {
+        m_pVdpVRAM[m_VdpAddress] = data;
+        break;
+    }
+    case VDP_WRITE_CRAM_OPERATION:
+    {
+        m_pVdpCRAM[m_VdpAddress & (m_bGameGear ? 0x3F : 0x1F)] = data;
+        break;
+    }
     }
     m_VdpAddress++;
     m_VdpAddress &= 0x3FFF;
@@ -319,28 +347,28 @@ void Video::WriteControl(u8 control)
 
         switch (m_VdpCode)
         {
-            case VDP_READ_VRAM_OPERATION:
-            {
-                m_VdpBuffer = m_pVdpVRAM[m_VdpAddress];
-                m_VdpAddress++;
-                m_VdpAddress &= 0x3FFF;
-                break;
-            }
-            case VDP_WRITE_REG_OPERATION:
-            {
-                u8 reg = control & 0x0F;
-                m_VdpRegister[reg] = (m_VdpAddress & 0x00FF);
+        case VDP_READ_VRAM_OPERATION:
+        {
+            m_VdpBuffer = m_pVdpVRAM[m_VdpAddress];
+            m_VdpAddress++;
+            m_VdpAddress &= 0x3FFF;
+            break;
+        }
+        case VDP_WRITE_REG_OPERATION:
+        {
+            u8 reg = control & 0x0F;
+            m_VdpRegister[reg] = (m_VdpAddress & 0x00FF);
 
-                if (reg < 2)
-                {
-                    m_bExtendedMode224 = ((m_VdpRegister[0] & 0x06) == 0x06) && ((m_VdpRegister[1] & 0x18) == 0x10);
-                }
-                else if (reg > 10)
-                {
-                    Log("--> ** Attempting to write on VDP REG %d: %X", reg, control);
-                }
-                break;
+            if (reg < 2)
+            {
+                m_bExtendedMode224 = ((m_VdpRegister[0] & 0x06) == 0x06) && ((m_VdpRegister[1] & 0x18) == 0x10);
             }
+            else if (reg > 10)
+            {
+                Log("--> ** Attempting to write on VDP REG %d: %X", reg, control);
+            }
+            break;
+        }
         }
     }
 }
@@ -363,11 +391,7 @@ void Video::ScanLine(int line)
 
         for (int scx = 0; scx < 256; scx++)
         {
-            GS_Color final_color;
-            final_color.red = 0;
-            final_color.green = 0;
-            final_color.blue = 0;
-            final_color.alpha = 0xFF;
+            GS_Color final_color(0, 0, 0);
             m_pColorFrameBuffer[line_256 + scx] = final_color;
         }
     }
@@ -391,7 +415,7 @@ void Video::RenderBG(int line)
         map_y &= 0xFF;
     }
     else if (map_y >= 224)
-            map_y -= 224;
+        map_y -= 224;
 
     int tile_y = map_y >> 3;
     int tile_y_offset = map_y & 7;
@@ -437,10 +461,10 @@ void Video::RenderBG(int line)
                 tile_pixel_x = tile_x_offset;
 
             palette_color = ((m_pVdpVRAM[tile_data_addr] >> tile_pixel_x) & 0x01) +
-                    (((m_pVdpVRAM[tile_data_addr + 1] >> tile_pixel_x) & 0x01) << 1) +
-                    (((m_pVdpVRAM[tile_data_addr + 2] >> tile_pixel_x) & 0x01) << 2) +
-                    (((m_pVdpVRAM[tile_data_addr + 3] >> tile_pixel_x) & 0x01) << 3) +
-                    palette_offset;
+                            (((m_pVdpVRAM[tile_data_addr + 1] >> tile_pixel_x) & 0x01) << 1) +
+                            (((m_pVdpVRAM[tile_data_addr + 2] >> tile_pixel_x) & 0x01) << 2) +
+                            (((m_pVdpVRAM[tile_data_addr + 3] >> tile_pixel_x) & 0x01) << 3) +
+                            palette_offset;
             info = 0x01 | ((priority && ((palette_color - palette_offset) != 0)) ? 0x02 : 0);
         }
 
@@ -449,11 +473,7 @@ void Video::RenderBG(int line)
 
         if (m_bGameGear && ((scx < GS_GG_X_OFFSET) || (scx >= (GS_GG_X_OFFSET + GS_GG_WIDTH)) || (scy < gg_y_offset) || (scy >= (gg_y_offset + GS_GG_HEIGHT))))
         {
-            GS_Color final_color;
-            final_color.red = 0;
-            final_color.green = 0;
-            final_color.blue = 0;
-            final_color.alpha = 0xFF;
+            GS_Color final_color(0, 0, 0);
             m_pColorFrameBuffer[pixel] = final_color;
         }
         else
@@ -485,7 +505,7 @@ void Video::RenderSprites(int line)
             break;
         }
     }
-    
+
     for (int sprite = max_sprite; sprite >= 0; sprite--)
     {
         int sprite_y = m_pVdpVRAM[sprite_table_address + sprite] + 1;
@@ -523,9 +543,9 @@ void Video::RenderSprites(int line)
             int tile_pixel_x = 7 - tile_x;
 
             int palette_color = ((m_pVdpVRAM[sprite_tile_addr] >> tile_pixel_x) & 0x01) +
-                    (((m_pVdpVRAM[sprite_tile_addr + 1] >> tile_pixel_x) & 0x01) << 1) +
-                    (((m_pVdpVRAM[sprite_tile_addr + 2] >> tile_pixel_x) & 0x01) << 2) +
-                    (((m_pVdpVRAM[sprite_tile_addr + 3] >> tile_pixel_x) & 0x01) << 3);
+                                (((m_pVdpVRAM[sprite_tile_addr + 1] >> tile_pixel_x) & 0x01) << 1) +
+                                (((m_pVdpVRAM[sprite_tile_addr + 2] >> tile_pixel_x) & 0x01) << 2) +
+                                (((m_pVdpVRAM[sprite_tile_addr + 3] >> tile_pixel_x) & 0x01) << 3);
             if (palette_color == 0)
                 continue;
 
@@ -534,11 +554,7 @@ void Video::RenderSprites(int line)
 
             if (m_bGameGear && ((sprite_pixel_x < GS_GG_X_OFFSET) || (sprite_pixel_x >= (GS_GG_X_OFFSET + GS_GG_WIDTH)) || (scy < gg_y_offset) || (scy >= (gg_y_offset + GS_GG_HEIGHT))))
             {
-                GS_Color final_color;
-                final_color.red = 0;
-                final_color.green = 0;
-                final_color.blue = 0;
-                final_color.alpha = 0xFF;
+                GS_Color final_color(0, 0, 0);
                 m_pColorFrameBuffer[pixel] = final_color;
             }
             else
@@ -559,16 +575,9 @@ void Video::FillPadding()
 {
     if (IsValidPointer(m_pColorFrameBuffer))
     {
-        GS_Color final_color;
+        GS_Color final_color(0, 0, 0);
 
-        if (m_bGameGear)
-        {
-            final_color.red = 0;
-            final_color.green = 0;
-            final_color.blue = 0;
-            final_color.alpha = 0xFF;
-        }
-        else
+        if (!m_bGameGear)
         {
             int palette_color = (m_VdpRegister[7] & 0x0F) + 16;
             final_color = ConvertTo8BitColor(palette_color);

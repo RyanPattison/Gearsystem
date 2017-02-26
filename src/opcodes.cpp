@@ -13,8 +13,8 @@
  * GNU General Public License for more details.
 
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/ 
- * 
+ * along with this program.  If not, see http://www.gnu.org/licenses/
+ *
  */
 
 #include "Processor.h"
@@ -282,7 +282,7 @@ void Processor::OPCode0x27()
     // DAA
     int idx = AF.GetHigh();
     if (IsSetFlag(FLAG_CARRY))
-        idx |= 0x100; 
+        idx |= 0x100;
     if (IsSetFlag(FLAG_HALF))
         idx |= 0x200;
     if (IsSetFlag(FLAG_NEGATIVE))
@@ -388,7 +388,7 @@ void Processor::OPCode0x35()
 
 void Processor::OPCode0x36()
 {
-    // LD (HL),n  
+    // LD (HL),n
     if (m_CurrentPrefix == 0xDD)
     {
         u8 d = m_pMemory->Read(PC.GetValue());

@@ -13,8 +13,8 @@
  * GNU General Public License for more details.
 
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/ 
- * 
+ * along with this program.  If not, see http://www.gnu.org/licenses/
+ *
  */
 
 #include "SegaMemoryRule.h"
@@ -103,35 +103,35 @@ void SegaMemoryRule::PerformWrite(u16 address, u8 value)
         // RAM (mirror)
         m_pMemory->Load(address, value);
         m_pMemory->Load(address - 0x2000, value);
-        
+
         switch (address)
         {
-            case 0xFFFC:
-            {
-                m_bRAMEnabled = IsSetBit(value, 3);
-                m_RAMBankStartAddress = IsSetBit(value, 2) ? 0x4000 : 0x0000;
-                if (m_bRAMEnabled && !m_pCartridge->HasRAMWithoutBattery())
-                    m_bPersistRAM = true;
-                break;
-            }
-            case 0xFFFD:
-            {
-                m_iMapperSlot[0] = value & (m_pCartridge->GetROMBankCount() - 1);
-                m_iMapperSlotAddress[0] = m_iMapperSlot[0] * 0x4000;
-                break;
-            }
-            case 0xFFFE:
-            {
-                m_iMapperSlot[1] = value & (m_pCartridge->GetROMBankCount() - 1);
-                m_iMapperSlotAddress[1] = m_iMapperSlot[1] * 0x4000;
-                break;
-            }
-            case 0xFFFF:
-            {
-                m_iMapperSlot[2] = value & (m_pCartridge->GetROMBankCount() - 1);
-                m_iMapperSlotAddress[2] = m_iMapperSlot[2] * 0x4000;
-                break;
-            }
+        case 0xFFFC:
+        {
+            m_bRAMEnabled = IsSetBit(value, 3);
+            m_RAMBankStartAddress = IsSetBit(value, 2) ? 0x4000 : 0x0000;
+            if (m_bRAMEnabled && !m_pCartridge->HasRAMWithoutBattery())
+                m_bPersistRAM = true;
+            break;
+        }
+        case 0xFFFD:
+        {
+            m_iMapperSlot[0] = value & (m_pCartridge->GetROMBankCount() - 1);
+            m_iMapperSlotAddress[0] = m_iMapperSlot[0] * 0x4000;
+            break;
+        }
+        case 0xFFFE:
+        {
+            m_iMapperSlot[1] = value & (m_pCartridge->GetROMBankCount() - 1);
+            m_iMapperSlotAddress[1] = m_iMapperSlot[1] * 0x4000;
+            break;
+        }
+        case 0xFFFF:
+        {
+            m_iMapperSlot[2] = value & (m_pCartridge->GetROMBankCount() - 1);
+            m_iMapperSlotAddress[2] = m_iMapperSlot[2] * 0x4000;
+            break;
+        }
         }
     }
 }
@@ -165,7 +165,7 @@ void SegaMemoryRule::SaveRam(std::ofstream & file)
 bool SegaMemoryRule::LoadRam(std::ifstream & file, s32 fileSize)
 {
     Log("SegaMemoryRule load RAM...");
-    
+
     if ((fileSize > 0) && (fileSize != 0x8000))
     {
         Log("SegaMemoryRule incorrect size. Expected: 512 Found: %d", fileSize);
@@ -180,7 +180,7 @@ bool SegaMemoryRule::LoadRam(std::ifstream & file, s32 fileSize)
     }
 
     Log("SegaMemoryRule load RAM done");
-    
+
     return true;
 }
 

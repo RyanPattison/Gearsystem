@@ -13,8 +13,8 @@
  * GNU General Public License for more details.
 
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/ 
- * 
+ * along with this program.  If not, see http://www.gnu.org/licenses/
+ *
  */
 
 #ifndef CORE_H
@@ -53,9 +53,7 @@ public:
     void EnableSound(bool enabled);
     void ResetSound(bool soft = false);
     void SetSoundSampleRate(int rate);
-    void SaveRam();
-    void SaveRam(const char* szPath);
-    void LoadRam();
+    bool SaveRam(const char* szPath);
     void LoadRam(const char* szPath);
     float GetVersion();
 

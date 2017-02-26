@@ -13,8 +13,8 @@
  * GNU General Public License for more details.
 
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/ 
- * 
+ * along with this program.  If not, see http://www.gnu.org/licenses/
+ *
  */
 
 #include "GameGearIOPorts.h"
@@ -49,20 +49,20 @@ u8 GameGearIOPorts::DoInput(u8 port)
     {
         switch (port)
         {
-            case 0x00:
-            {
-                u8 port00 = m_pInput->GetPort00();
-                if (m_pCartridge->GetZone() == Cartridge::CartridgeExportSMS)
-                    port00 |= 0x40;
-                return port00;
-            }
-            case 0x01:
-                return 0x7F;
-            case 0x03:
-            case 0x05:
-                return 0x00;
-            default:
-                return 0xFF;
+        case 0x00:
+        {
+            u8 port00 = m_pInput->GetPort00();
+            if (m_pCartridge->GetZone() == Cartridge::CartridgeExportSMS)
+                port00 |= 0x40;
+            return port00;
+        }
+        case 0x01:
+            return 0x7F;
+        case 0x03:
+        case 0x05:
+            return 0x00;
+        default:
+            return 0xFF;
         }
     }
     else if (port < 0x40)
@@ -96,21 +96,21 @@ u8 GameGearIOPorts::DoInput(u8 port)
         // The remaining locations return $FF.
         switch (port)
         {
-            case 0xC0:
-            case 0xDC:
-            {
-                return m_pInput->GetPortDC();
-            }
-            case 0xC1:
-            case 0xDD:
-            {
-                return ((m_pInput->GetPortDD() & 0x3F) | (m_Port3F & 0xC0));
-            }
-            default:
-            {
-                Log("--> ** Attempting to read from port $%X", port);
-                return 0xFF;
-            }
+        case 0xC0:
+        case 0xDC:
+        {
+            return m_pInput->GetPortDC();
+        }
+        case 0xC1:
+        case 0xDD:
+        {
+            return ((m_pInput->GetPortDD() & 0x3F) | (m_Port3F & 0xC0));
+        }
+        default:
+        {
+            Log("--> ** Attempting to read from port $%X", port);
+            return 0xFF;
+        }
         }
     }
 }
@@ -138,7 +138,7 @@ void GameGearIOPorts::DoOutput(u8 port, u8 value)
             if (((value  & 0x01) && !(m_Port3F_HC & 0x01)) || ((value  & 0x08) && !(m_Port3F_HC & 0x08)))
                 m_pVideo->LatchHCounter();
             m_Port3F_HC = value & 0x05;
-       
+
             m_Port3F =  ((value & 0x80) | (value & 0x20) << 1) & 0xC0;
             if (m_pCartridge->GetZone() == Cartridge::CartridgeExportSMS)
                 m_Port3F ^= 0xC0;
@@ -158,7 +158,7 @@ void GameGearIOPorts::DoOutput(u8 port, u8 value)
         else
             m_pVideo->WriteControl(value);
     }
-#ifdef DEBUG_GEARSYSTEM 
+#ifdef DEBUG_GEARSYSTEM
     else
     {
         // Writes have no effect.
@@ -173,7 +173,7 @@ void GameGearIOPorts::DoOutput(u8 port, u8 value)
         else
         {
             Log("--> ** Output to port $%X: %X", port, value);
-        }      
+        }
     }
 #endif
 }

@@ -86,7 +86,7 @@ typedef unsigned char blargg_byte;
 
 // BLARGG_SOURCE_BEGIN: If defined, #included, allowing redefition of dprintf and check
 #ifdef BLARGG_SOURCE_BEGIN
-	#include BLARGG_SOURCE_BEGIN
+#include BLARGG_SOURCE_BEGIN
 #endif
 
 #endif

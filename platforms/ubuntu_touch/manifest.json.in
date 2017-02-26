@@ -1,0 +1,16 @@
+{
+    "name": "gearsystem.rpattison",
+    "description": "A Sega Master System / Game Gear Emulator for Ubuntu Touch",
+    "architecture": "@CLICK_ARCH@",
+    "title": "GearSystem",
+    "hooks": {
+        "gearsystem": {
+            "apparmor": "gearsystem.apparmor",
+            "desktop": "gearsystem.rpattison.desktop",
+            "content-hub": "gearsystem-content.json"
+        }
+    },
+    "version": "1.0",
+    "maintainer": "Ryan Pattison <ryan@theinternetemail.com>",
+    "framework": "ubuntu-sdk-15.04"
+}

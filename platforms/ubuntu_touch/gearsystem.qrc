@@ -1,0 +1,8 @@
+<RCC>
+    <qresource prefix="/">
+        <file>main.qml</file>
+        <file>DirectionalPad.qml</file>
+        <file>ButtonPad.qml</file>
+        <file>ButtonPanel.qml</file>
+    </qresource>
+</RCC>

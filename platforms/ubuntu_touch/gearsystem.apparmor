@@ -1,0 +1,8 @@
+{
+    "policy_groups": [
+        "content_exchange",
+        "audio",
+        "video"
+    ],
+    "policy_version": 1.3
+}

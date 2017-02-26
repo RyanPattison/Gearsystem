@@ -13,8 +13,8 @@
  * GNU General Public License for more details.
 
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/ 
- * 
+ * along with this program.  If not, see http://www.gnu.org/licenses/
+ *
  */
 
 #ifndef PROCESSOR_INLINE_H
@@ -148,12 +148,12 @@ inline SixteenBitRegister* Processor::GetPrefixedRegister()
 {
     switch (m_CurrentPrefix)
     {
-        case 0xDD:
-            return &IX;
-        case 0xFD:
-            return &IY;
-        default:
-            return &HL;
+    case 0xDD:
+        return &IX;
+    case 0xFD:
+        return &IY;
+    default:
+        return &HL;
     }
 }
 
@@ -161,38 +161,38 @@ inline u16 Processor::GetEffectiveAddress()
 {
     switch (m_CurrentPrefix)
     {
-        case 0xDD:
+    case 0xDD:
+    {
+        u16 address = IX.GetValue();
+        if (m_bPrefixedCBOpcode)
         {
-            u16 address = IX.GetValue();
-            if (m_bPrefixedCBOpcode)
-            {
-                address += static_cast<s8> (m_PrefixedCBValue);
-            }
-            else
-            {
-                address += static_cast<s8> (m_pMemory->Read(PC.GetValue()));
-                PC.Increment();
-                XY.SetValue(address);
-            }
-            return address;
+            address += static_cast<s8> (m_PrefixedCBValue);
         }
-        case 0xFD:
+        else
         {
-            u16 address = IY.GetValue();
-            if (m_bPrefixedCBOpcode)
-            {
-                address += static_cast<s8> (m_PrefixedCBValue);
-            }
-            else
-            {
-                address += static_cast<s8> (m_pMemory->Read(PC.GetValue()));
-                PC.Increment();
-                XY.SetValue(address);
-            }
-            return address;
+            address += static_cast<s8> (m_pMemory->Read(PC.GetValue()));
+            PC.Increment();
+            XY.SetValue(address);
         }
-        default:
-            return HL.GetValue();
+        return address;
+    }
+    case 0xFD:
+    {
+        u16 address = IY.GetValue();
+        if (m_bPrefixedCBOpcode)
+        {
+            address += static_cast<s8> (m_PrefixedCBValue);
+        }
+        else
+        {
+            address += static_cast<s8> (m_pMemory->Read(PC.GetValue()));
+            PC.Increment();
+            XY.SetValue(address);
+        }
+        return address;
+    }
+    default:
+        return HL.GetValue();
     }
 }
 
@@ -1155,7 +1155,7 @@ inline void Processor::OPCodes_BIT(EightBitRegister* reg, int bit)
     {
         ToggleFlag(FLAG_ZERO);
         ToggleFlag(FLAG_PARITY);
-    }    
+    }
     else if (bit == 7)
         ToggleFlag(FLAG_SIGN);
     if (IsSetBit(value, 3))
