@@ -15,7 +15,7 @@ MainView {
     applicationName: "gearsystem.rpattison"
 
     property color red: "#980e0d"
-    property color black: "#222222"
+    property color black: "#1b1b21"
     property color gray: "#242424"
     property color white: "#c4c4c4"
     property color blue: "#0632d0"
@@ -50,7 +50,7 @@ MainView {
 
     GearSystemEmulator {
         id: emu
-        color: black
+        color: "#1b1b21"
     }
 
     function importItems(items) {
@@ -72,12 +72,11 @@ MainView {
     }
 
     function requestROM() {
-        emu.pause()
         var peer = null
         for (var i = 0; i < model.peers.length; ++i) {
             var p = model.peers[i]
             var s = p.appId
-            if (s.indexOf("filemanager") != -1) {
+            if (s.indexOf("filemanager") !== -1) {
                 peer = p
             }
         }
@@ -128,16 +127,16 @@ MainView {
         id: help
         text: i18n.tr("OPEN ROM…")
         font.pixelSize: units.gu(6)
-        color: blue
+        color: "#c6393c"
         anchors.centerIn: loaderArea
         font.bold: true
-        font.italic: true
     }
+
 
     MouseArea {
         id: loaderArea
-        width: emu.rect.width
-        height: emu.rect.height
+        width: emu.rect.width * 0.8
+        height: emu.rect.height * 0.9 // keep some padding away from buttons
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: parent.top
         onClicked: requestROM()
@@ -153,11 +152,10 @@ MainView {
 
         DirectionalPad {
             id: dpad
-            x: units.gu(1)
+            x: 0
             y: 0
-            width: units.gu(17)
-            height: units.gu(17)
-
+            width: units.gu(19)
+            height: units.gu(19)
             onLeftPressed: click()
             onRightPressed: click()
             onUpPressed: click()
@@ -174,14 +172,16 @@ MainView {
 
         ButtonPanel {
             id: start
-            y: units.gu(0)
+            y: units.gu(2)
             width: parent.width
-            height: units.gu(3)
+            height: units.gu(4)
+
+            onPressed: click()
         }
 
         ButtonPad {
             id: btns
-            y: units.gu(6)
+            y: units.gu(7)
             width: parent.width
             height: units.gu(18)
 
@@ -221,80 +221,11 @@ MainView {
         onStateChanged: {
             if (root.activeTransfer.state === ContentTransfer.Charged) {
                 root.importItems(root.activeTransfer.items)
-            } else if (root.activeTransfer.state == ContentTransfer.Aborted) {
+            } else if (root.activeTransfer.state === ContentTransfer.Aborted) {
                 emu.play()
                 picker.visible = false
                 console.log("aborted transfer")
             }
-        }
-    }
-
-    property var startKey: Qt.Key_Return
-    property var selectKey: Qt.Key_Backspace
-    property var upKey: Qt.Key_Up
-    property var downKey: Qt.Key_Down
-    property var leftKey: Qt.Key_Left
-    property var rightKey: Qt.Key_Right
-    property var aKey: Qt.Key_A
-    property var bKey: Qt.Key_B
-
-    Keys.onPressed: {
-        var key = event.key
-        if (key == leftKey) {
-            emu.leftPressed()
-            event.accepted = true
-        } else if (key == rightKey) {
-            emu.rightPressed()
-            event.accepted = true
-        } else if (key == downKey) {
-            emu.downPressed()
-            event.accepted = true
-        } else if (key == upKey) {
-            emu.upPressed()
-            event.accepted = true
-        } else if (key == aKey) {
-            emu.aPressed()
-            event.accepted = true
-        } else if (key == bKey) {
-            emu.bPressed()
-            event.accepted = true
-        } else if (key == startKey) {
-            emu.startPressed()
-            event.accepted = true
-        } else if (key == selectKey) {
-            emu.selectPressed()
-            event.accepted = true
-        } else {
-
-        }
-    }
-
-    Keys.onReleased: {
-        var key = event.key
-        if (key == leftKey) {
-            emu.leftReleased()
-            event.accepted = true
-        } else if (key == rightKey) {
-            emu.rightReleased()
-            event.accepted = true
-        } else if (key == downKey) {
-            emu.downReleased()
-            event.accepted = true
-        } else if (key == upKey) {
-            emu.upReleased()
-            event.accepted = true
-        } else if (key == aKey) {
-            emu.aReleased()
-            event.accepted = true
-        } else if (key == bKey) {
-            emu.bReleased()
-            event.accepted = true
-        } else if (key == startKey) {
-            emu.startReleased()
-            event.accepted = true
-        } else if (key == selectKey) {
-            emu.selectReleased()
-            event.accepted = true
         }
     }
 
@@ -312,7 +243,7 @@ MainView {
 
     Icon {
         name: gameSettings.sound ? "speaker" : "speaker-mute"
-        color: white
+        color: "#e6e6e6"
         width: units.gu(4)
         height: units.gu(4)
         anchors {

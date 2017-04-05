@@ -3,6 +3,7 @@
         <file>main.qml</file>
         <file>DirectionalPad.qml</file>
         <file>ButtonPad.qml</file>
+        <file>PushButton.qml</file>
         <file>ButtonPanel.qml</file>
     </qresource>
 </RCC>

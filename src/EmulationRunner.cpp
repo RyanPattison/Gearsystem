@@ -13,7 +13,7 @@ QList<QThread *> EmulationRunner::threads;
 
 EmulationRunner::EmulationRunner(QObject *parent) : QThread(parent)
 {
-    readFrame(m_pixels, 256);
+    readFrame(m_pixels);
     threads.append(this);
     m_core.Init();
     m_isPaused = true;
@@ -39,7 +39,7 @@ void EmulationRunner::run()
                 int elapsed = m_time.elapsed();
                 int rest = ((i + 1) * 16 - elapsed);
                 if (m_pixel_lock.tryLock(rest)) {
-                    readFrame(m_pixels, 256);
+                    readFrame(m_pixels);
                     m_pixel_lock.unlock();
                 }
             }
@@ -93,13 +93,13 @@ bool EmulationRunner::loadRom(QString path)
 }
 
 
-void EmulationRunner::keyPressed(GS_Joypads joypad ,GS_Keys key)
+void EmulationRunner::keyPressed(GS_Joypads joypad, GS_Keys key)
 {
     m_core.KeyPressed(joypad, key);
 }
 
 
-void EmulationRunner::keyReleased(GS_Joypads joypad ,GS_Keys key)
+void EmulationRunner::keyReleased(GS_Joypads joypad, GS_Keys key)
 {
     m_core.KeyReleased(joypad, key);
 }
@@ -175,7 +175,7 @@ void EmulationRunner::stop()
 }
 
 
-void EmulationRunner::readFrame(unsigned char *pixels, int)
+void EmulationRunner::readFrame(unsigned char *pixels)
 {
     GS_Color *buff = reinterpret_cast<GS_Color*>(pixels);
     GS_Color *src = reinterpret_cast<GS_Color*>(m_buffer);

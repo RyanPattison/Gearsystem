@@ -18,20 +18,12 @@ GSEmulator::GSEmulator() : m_renderer(0)
     windowChanged(window());
     m_emu = new EmulationRunner(this);
     m_emu->start(QThread::TimeCriticalPriority);
-    //startTimer(16);
-    //connect(qApp, SIGNAL(lastWindowClosed()), this, SLOT(shutdown()));
 }
 
 void GSEmulator::timerEvent(QTimerEvent *)
 {
     window()->update();
 }
-
-/*
-void GSEmulator::redraw()
-{
-    window()->update();
-}*/
 
 void GSEmulator::setColor(QColor c)
 {
@@ -89,42 +81,64 @@ void GSEmulator::sync()
 void GSEmulator::upPressed()    {
     keyPressed(Joypad_1, Key_Up);
 }
+
 void GSEmulator::leftPressed()  {
     keyPressed(Joypad_1, Key_Left);
 }
+
 void GSEmulator::rightPressed() {
     keyPressed(Joypad_1, Key_Right);
 }
+
 void GSEmulator::downPressed()  {
     keyPressed(Joypad_1, Key_Down);
 }
-void GSEmulator::startPressed() {
-    keyPressed(Joypad_1, Key_Start);
+
+void GSEmulator::startPressed()
+{
+    if (not m_emu->isGameGear()) {
+        aPressed();
+    } else {
+        keyPressed(Joypad_1, Key_Start);
+    }
 }
+
 void GSEmulator::aPressed()     {
     keyPressed(Joypad_1, Key_1);
 }
+
 void GSEmulator::bPressed()     {
     keyPressed(Joypad_1, Key_2);
 }
+
 void GSEmulator::upReleased()   {
     keyReleased(Joypad_1, Key_Up);
 }
+
 void GSEmulator::leftReleased() {
     keyReleased(Joypad_1, Key_Left);
 }
+
 void GSEmulator::rightReleased() {
     keyReleased(Joypad_1, Key_Right);
 }
+
 void GSEmulator::downReleased() {
     keyReleased(Joypad_1, Key_Down);
 }
+
 void GSEmulator::startReleased() {
-    keyReleased(Joypad_1, Key_Start);
+    if (not m_emu->isGameGear()) {
+        aReleased();
+    } else {
+        keyReleased(Joypad_1, Key_Start);
+    }
 }
+
 void GSEmulator::aReleased() 	{
     keyReleased(Joypad_1, Key_1);
 }
+
 void GSEmulator::bReleased() 	{
     keyReleased(Joypad_1, Key_2);
 }

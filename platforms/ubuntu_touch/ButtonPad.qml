@@ -6,93 +6,27 @@ MultiPointTouchArea {
     property int unit: width / 19
     property int bsize: unit * 9
 
-    property color red: "#980e0d"
-    property color black: "#000000"
-    property color gray: "#242424"
-    property color white: "#c4c4c4"
-
-    property real outline: units.gu(0.375)
-
-    Rectangle {
+    PushButton {
         id: a
         width: bsize
-        height: width
-        radius: bsize / 2
-        color: black
-        border.width: 10
-        border.color: red
-
-        Rectangle {
-            width: parent.width - units.gu(1)
-            height: width
-            radius: width / 2
-            color: gray
-            anchors.centerIn: parent
-            border.width: units.gu(0.5)
-            border.color: white
-            Label {
-                anchors.centerIn: parent
-                color: white
-                text: "1"
-                fontSize: "x-large"
-                font.bold: true
-                font.italic: true
-            }
-        }
+        height: bsize
     }
 
-    Rectangle {
+    PushButton {
         id: b
-        x: root.width / 2
         width: bsize
-        height: width
-        radius: bsize / 2
-        color: black
-        border.width: 10
-        border.color: red
-
-        Rectangle {
-            width: parent.width - units.gu(1)
-            height: width
-            radius: width / 2
-            color: gray
-            anchors.centerIn: parent
-            border.width: units.gu(0.5)
-            border.color: white
-            Label {
-                anchors.centerIn: parent
-                color: white
-                text: "2"
-                fontSize: "x-large"
-                font.bold: true
-                font.italic: true
-            }
-        }
+        height: bsize
+        anchors.left: a.right
+        anchors.leftMargin: units.gu(0.75)
     }
 
-    onAPressed: {
+    onAPressed: a.press()
 
-        //  a.border.color = gb_purple_pressed;
-        // a.color = gb_purple_accent;
-    }
+    onAReleased: a.release()
 
-    onAReleased: {
+    onBPressed: b.press()
 
-        //    a.border.color = gb_purple_accent;
-        //   a.color = gb_purple;
-    }
-
-    onBPressed: {
-
-        //      b.border.color = gb_purple_pressed;
-        //     b.color = gb_purple_accent;
-    }
-
-    onBReleased: {
-
-        //        b.border.color = gb_purple_accent;
-        //       b.color = gb_purple;
-    }
+    onBReleased: b.release()
 
     property bool aIsDown: false
     property bool bIsDown: false
@@ -103,7 +37,7 @@ MultiPointTouchArea {
     signal bReleased
 
     onTouchUpdated: {
-        var r = a.radius
+        var r = a.width / 2
         var ax = a.x + r
         var bx = b.x + r
         var by = b.y + r

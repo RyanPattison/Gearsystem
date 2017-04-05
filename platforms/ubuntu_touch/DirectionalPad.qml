@@ -16,78 +16,201 @@ Item {
     signal upReleased
     signal downReleased
 
-    property color red: "#980e0d"
+    property color red: "#c1393c"
     property color black: "#000000"
-    property color gray: "#242424"
+    property color gray: "#969ca4"
     property color white: "#c4c4c4"
 
+    property real displacement: units.gu(0.75)
+
     Rectangle {
-        id: back
+        id: outline
         anchors.fill: parent
         border.color: red
-        border.width: units.gu(0.5)
-        color: black
-        radius: units.gu(3)
+        border.width: units.gu(0.33)
+        radius: units.gu(1)
+        color: "transparent"
 
         Rectangle {
-            id: inner
+            id: back
             color: gray
-            radius: units.gu(2)
-            anchors {
-                fill: parent
-                margins: units.gu(1)
-            }
-
-            border.color: white
-            border.width: units.gu(0.25)
-            anchors.centerIn: parent
+            anchors.fill: parent
+            anchors.margins: units.gu(0.5)
 
             Rectangle {
-                id: directions
-                color: red
-                width: back.width / 2
-                height: width
+                id: forwardSlash
+                color: "#1b1b21"
+                width: parent.width * Math.sqrt(2)
+                height: units.gu(0.5)
                 rotation: 45
                 anchors.centerIn: parent
             }
 
             Rectangle {
-                id: highlight
-                color: white
-                width: inner.width / 2
-                height: width
+                id: backSlash
+                color: "#1b1b21"
+                width: parent.width * Math.sqrt(2)
+                height: units.gu(0.5)
+                rotation: -45
                 anchors.centerIn: parent
+            }
+
+            Label {
+                text: "▲"
+                color: "white"
+                anchors {
+                    verticalCenter: back.verticalCenter
+                    left: back.left
+                    leftMargin: units.gu(0.1)
+                }
+                fontSize: "x-small"
+                rotation: -90
+            }
+
+            Label {
+                text: "▲"
+                color: "white"
+                anchors {
+                    verticalCenter: back.verticalCenter
+                    right: back.right
+                    rightMargin: units.gu(0.1)
+                }
+                fontSize: "x-small"
+                rotation: 90
+            }
+
+            Label {
+                text: "▲"
+                color: "white"
+                anchors {
+                    horizontalCenter: back.horizontalCenter
+                    top: back.top
+                    topMargin: -units.gu(0.1)
+                }
+                fontSize: "x-small"
+                rotation: 0
+            }
+
+            Label {
+                text: "▲"
+                color: "white"
+                anchors {
+                    horizontalCenter: back.horizontalCenter
+                    bottom: back.bottom
+                    bottomMargin: -units.gu(0.1)
+                }
+                fontSize: "x-small"
+                rotation: 180
+            }
+
+            Rectangle {
+                id: bezel
+                color: "black"
+                border.color: "#373737"
+                radius: units.gu(2)
+                border.width: units.gu(0.5)
+                anchors.fill: parent
+                anchors.margins: units.gu(1.5)
 
                 Rectangle {
-                    width: directions.width + units.gu(1)
-                    height: width
-                    radius: width / 2
-                    color: gray
+                    id: inner
+                    color: "#3c3c3c"
+                    radius: units.gu(1)
+                    anchors.fill: parent
+                    anchors.margins: units.gu(0.75)
+                    border.color: "#555555"
+                    border.width: units.gu(0.25)
                     anchors.centerIn: parent
 
-                    Rectangle {
-                        width: parent.width * 0.667
-                        height: width
-                        border.color: black
-                        border.width: units.gu(0.25)
-                        anchors.centerIn: parent
-                        color: gray
-                        radius: width / 2
+                    Item {
+                        id: moveGroup
+                        width: parent.width
+                        height: parent.height
+
+                        Rectangle {
+                            id: hbar
+                            color: "#505050"
+                            width: back.width * 0.60
+                            height: units.gu(0.67)
+                            anchors.centerIn: parent
+                        }
+
+                        Rectangle {
+                            id: vbar
+                            color: "#505050"
+                            height: back.width * 0.60
+                            width: units.gu(0.67)
+                            anchors.centerIn: parent
+                        }
+
+                        Rectangle {
+                            id: highlight
+                            color: "#323232"
+                            anchors.fill: parent
+                            anchors.margins: units.gu(2.5)
+                            radius: width / 2
+
+                            Rectangle {
+                                id: cover
+                                anchors {
+                                    fill: parent
+                                    margins: units.gu(2)
+                                }
+
+                                border.color: "#282828"
+                                border.width: units.gu(0.25)
+                                anchors.centerIn: parent
+                                color: "#3c3c3c"
+                                radius: width / 2
+                            }
+                        }
                     }
                 }
             }
         }
     }
 
+    onLeftPressed: {
+        moveGroup.x -= displacement
+    }
+
+    onRightPressed: {
+        moveGroup.x += displacement
+    }
+
+    onUpPressed: {
+        moveGroup.y -= displacement
+    }
+
+    onDownPressed: {
+        moveGroup.y += displacement
+    }
+
+    onLeftReleased: {
+        moveGroup.x += displacement
+    }
+
+    onRightReleased: {
+        moveGroup.x -= displacement
+    }
+
+    onUpReleased: {
+        moveGroup.y += displacement
+    }
+
+    onDownReleased: {
+        moveGroup.y -= displacement
+    }
+
     function release() {
         if (direction) {
-            if (direction == "left") {
+            if (direction === "left") {
                 leftReleased()
-            } else if (direction == "right") {
+            } else if (direction === "right") {
                 rightReleased()
-            } else if (direction == "up") {
+            } else if (direction === "up") {
                 upReleased()
-            } else if (direction == "down") {
+            } else if (direction === "down") {
                 downReleased()
             }
             direction = null
@@ -95,16 +218,16 @@ Item {
     }
 
     function press(dir) {
-        if (dir != direction) {
+        if (dir !== direction) {
             release()
             direction = dir
-            if (direction == "left") {
+            if (direction === "left") {
                 leftPressed()
-            } else if (direction == "right") {
+            } else if (direction === "right") {
                 rightPressed()
-            } else if (direction == "up") {
+            } else if (direction === "up") {
                 upPressed()
-            } else if (direction == "down") {
+            } else if (direction === "down") {
                 downPressed()
             }
         }

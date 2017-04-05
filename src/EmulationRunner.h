@@ -43,7 +43,7 @@ protected:
     virtual void run();
     QString defaultPath();
     QString defaultSavePath();
-    void readFrame(unsigned char *pixels, int width);
+    void readFrame(unsigned char *pixels);
 
 private:
     unsigned char m_pixels[256 * 256 * sizeof(GS_Color)];
